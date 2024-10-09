@@ -8,6 +8,7 @@ import (
 	"github.com/zakirkun/pesnin/pkg/minio"
 	"github.com/zakirkun/pesnin/pkg/queue"
 	"github.com/zakirkun/pesnin/pkg/server"
+	"github.com/zakirkun/pesnin/pkg/tracer"
 )
 
 type InfrastructureContext struct {
@@ -18,6 +19,7 @@ type InfrastructureContext struct {
 	Logstash logstash.LogstashModel
 	Server   server.ServerContext
 	Logger   log.LoggerContext
+	Otel     tracer.JeagerContext
 
 	ServicesName string
 }
@@ -43,6 +45,12 @@ func (b *InfrastructureBuilder) InitLogger(logger log.LoggerContext) *Infrastruc
 // WithDatabase adds the database component to the infrastructure
 func (b *InfrastructureBuilder) WithDatabase(db database.DBModel) *InfrastructureBuilder {
 	b.Infra.Database = db
+	return b
+}
+
+// WithTracer adds the tracer component to the infrastructure
+func (b *InfrastructureBuilder) WithOtel(otel tracer.JeagerContext) *InfrastructureBuilder {
+	b.Infra.Otel = otel
 	return b
 }
 

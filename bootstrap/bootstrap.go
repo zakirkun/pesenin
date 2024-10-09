@@ -11,6 +11,7 @@ import (
 	"github.com/zakirkun/pesnin/pkg/logstash"
 	"github.com/zakirkun/pesnin/pkg/minio"
 	"github.com/zakirkun/pesnin/pkg/queue"
+	"github.com/zakirkun/pesnin/pkg/tracer"
 )
 
 type BootstrapContext struct {
@@ -46,6 +47,10 @@ func (b *BootstrapContext) InitApp() {
 
 	if b.builder.Database.Host != "" {
 		b.database()
+	}
+
+	if b.builder.Otel.Endpoint != "" {
+		b.otel()
 	}
 
 	if b.builder.Server.Host != "" {
@@ -117,4 +122,14 @@ func (b *BootstrapContext) logstash() {
 
 func (b *BootstrapContext) serve() {
 	b.builder.Server.Run()
+}
+
+func (b *BootstrapContext) otel() {
+	tp, err := b.builder.Otel.Open()
+	if err != nil {
+		_log.Fatalf("Failed to open minio: %v", err)
+		os.Exit(1)
+	}
+
+	tracer.Tracer = tp
 }

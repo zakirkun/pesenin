@@ -12,6 +12,7 @@ import (
 	"github.com/zakirkun/pesnin/pkg/minio"
 	"github.com/zakirkun/pesnin/pkg/queue"
 	"github.com/zakirkun/pesnin/pkg/server"
+	"github.com/zakirkun/pesnin/pkg/tracer"
 )
 
 func SetConfig(configFile *string) {
@@ -72,5 +73,12 @@ func SetMinio() minio.MinioContext {
 		AccessKeyID:     config.GetString("minio.access_key"),
 		SecretAccessKey: config.GetString("minio.access_secret"),
 		UseSSL:          config.GetBool("minio.use_ssl"),
+	}
+}
+
+func SetOtel() tracer.JeagerContext {
+	return tracer.JeagerContext{
+		Endpoint:     config.GetString("tracer.endpoint"),
+		ServicesName: config.GetString("tracer.services_name"),
 	}
 }
