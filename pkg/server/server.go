@@ -105,5 +105,64 @@ func (s ServerContext) Run() {
 }
 
 func (s ServerContext) RunWithSSL() {
+	// Set up a channel to listen to for interrupt signals
+	var runChan = make(chan os.Signal, 1)
 
+	// Set up a context to allow for graceful server shutdowns in the event
+	// of an OS interrupt (defers the cancel just in case)
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		s.Timeout,
+	)
+	defer cancel()
+
+	// Validate the certificate and key file paths
+	certFilePath, ok1 := s.CertFile.(string)
+	keyFilePath, ok2 := s.KeyFile.(string)
+	if !ok1 || !ok2 || certFilePath == "" || keyFilePath == "" {
+		log.Fatalf("Invalid CertFile or KeyFile paths. Ensure CertFile and KeyFile are set to valid strings.")
+		return
+	}
+
+	// Define server options
+	server := &http.Server{
+		Addr:         s.Host,
+		Handler:      s.Handler,
+		ReadTimeout:  s.Timeout * time.Second,
+		WriteTimeout: s.WriteTimeout * time.Second,
+		IdleTimeout:  s.IdleTimeout * time.Second,
+	}
+
+	myFigure := figure.NewColorFigure(s.AppName, "", "green", true)
+	myFigure.Print()
+
+	// AppName
+	log.Printf("AppName: %v", s.AppName)
+
+	// Info
+	log.Printf("Server Running on (SSL): %v", s.Host)
+
+	// Handle ctrl+c/ctrl+x interrupt
+	signal.Notify(runChan, os.Interrupt, syscall.SIGTERM)
+
+	// Run the server on a new goroutine
+	go func() {
+		if err := server.ListenAndServeTLS(certFilePath, keyFilePath); err != nil {
+			if err != http.ErrServerClosed {
+				log.Fatalf("Server failed to start due to err: %v", err)
+			}
+		}
+	}()
+
+	// Block on this channel listening for those previously defined syscalls assign
+	// to variable so we can let the user know why the server is shutting down
+	interrupt := <-runChan
+
+	// If we get one of the pre-prescribed syscalls, gracefully terminate the server
+	// while alerting the user
+	log.Printf("Server is shutting down due to %+v\n", interrupt)
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
+	}
 }
