@@ -1,5 +1,5 @@
 package tracer
 
-import "go.opentelemetry.io/otel/sdk/trace"
+import "go.opentelemetry.io/otel/trace"
 
-var Tracer *trace.TracerProvider
+var Tracer trace.Tracer

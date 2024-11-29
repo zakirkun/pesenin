@@ -1,8 +1,6 @@
 package tracer
 
 import (
-	"context"
-
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -13,8 +11,6 @@ import (
 type JeagerContext struct {
 	Endpoint     string
 	ServicesName string
-
-	ctx context.Context
 }
 
 func (j JeagerContext) Open() (*sdktrace.TracerProvider, error) {
@@ -34,20 +30,4 @@ func (j JeagerContext) Open() (*sdktrace.TracerProvider, error) {
 	otel.SetTracerProvider(tp)
 
 	return tp, nil
-}
-
-func (j *JeagerContext) SetConext(ctx context.Context) *JeagerContext {
-	j.ctx = ctx
-	return j
-}
-
-func (j *JeagerContext) WriteOtel(layer, spanName string) *JeagerContext {
-	tracer := otel.Tracer(layer)
-	ctx, span := tracer.Start(context.Background(), spanName)
-	defer span.End()
-
-	// fallback context
-	j.SetConext(ctx)
-
-	return j
 }

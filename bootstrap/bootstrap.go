@@ -131,5 +131,9 @@ func (b *BootstrapContext) otel() {
 		os.Exit(1)
 	}
 
-	tracer.Tracer = tp
+	tracer.Tracer = tp.Tracer(b.builder.ServicesName)
+
+	defer func() {
+		_ = tp.Shutdown(context.Background())
+	}()
 }
